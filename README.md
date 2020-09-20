@@ -47,6 +47,6 @@ SSH flags:
 * `-F`, `--ssh-config=FILE`: specify SSH config file used for `ssh -F`
 * `--ssh-persist=(true|false)` (default: `true`): enable ControlPersit
 
-### Subcommand: `help` (default)
+### Subcommand: `help`
 Shows help
 
