@@ -1,7 +1,9 @@
 package ssh
 
 import (
+	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -22,7 +24,7 @@ func (c *SSHConfig) Args() []string {
 		args = append(args,
 			"-o", "ControlMaster=auto",
 			// TODO: Does this work on Windows?
-			"-o", "ControlPath=~/.ssh/sshocker-%r@%h:%p",
+			"-o", "ControlPath=~/.ssh/sshocker-%r@%h:%p-"+strconv.Itoa(os.Getpid()),
 			"-o", "ControlPersist=yes",
 		)
 	}
