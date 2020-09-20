@@ -1,6 +1,8 @@
 package reversesshfs
 
 import (
+	"bytes"
+	"html/template"
 	"io"
 	"os"
 	"os/exec"
@@ -91,7 +93,55 @@ func (rsf *ReverseSSHFS) Start() error {
 			}
 		}
 	}()
+	if err := rsf.waitForRemoteReady(); err != nil {
+		// not a fatal error
+		logrus.WithError(err).Warnf("failed to confirm whether %v [remote] is successfully mounted", rsf.RemotePath)
+	}
 	return nil
+}
+
+func (rsf *ReverseSSHFS) waitForRemoteReady() error {
+	scriptName := "wait-for-remote-ready"
+	scriptTemplate := `#!/bin/sh
+set -eu
+dir="{{.Dir}}"
+max_trial="{{.MaxTrial}}"
+LANG=C
+LC_ALL=C
+export LANG LC_ALL
+i=0
+while : ; do
+  # FIXME: not really robust
+  if mount | grep "on ${dir}" | egrep -qw "fuse.sshfs|osxfuse"; then
+		echo '{"return":{}}'
+    exit 0
+  fi
+	sleep 1
+	if [ $i -ge ${max_trial} ]; then
+	  echo >&2 "sshfs does not seem to be mounted on ${dir}"
+		exit 1
+	fi
+	i=$((i + 1))
+done
+`
+	t, err := template.New(scriptName).Parse(scriptTemplate)
+	if err != nil {
+		return err
+	}
+	m := map[string]string{
+		// rsf.RemotePath should have been verified during rsf.Prepare()
+		"Dir":      rsf.RemotePath,
+		"MaxTrial": "30",
+	}
+	var b bytes.Buffer
+	if err := t.Execute(&b, m); err != nil {
+		return err
+	}
+	script := b.String()
+	logrus.Debugf("generated script %q with map %v: %q", scriptName, m, script)
+	stdout, stderr, err := ssh.ExecuteScript(rsf.Host, rsf.SSHConfig, script, scriptName)
+	logrus.Debugf("executed script %q, stdout=%q, stderr=%q, err=%v", scriptName, stdout, stderr, err)
+	return err
 }
 
 func (rsf *ReverseSSHFS) Close() error {
