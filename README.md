@@ -22,6 +22,31 @@ To use reverse sshfs, `sshfs` needs to be installed on the server (not on the cl
 $ ssh user@example.com -- sudo apt-get install -y sshfs
 ```
 
+## Usage
+Global flags:
+* `--debug=(true|false)` (default: `false`): debug mode
+
+### Subcommand: `run` (default)
+sshocker's equivalent of `docker run`.
+
+e.g.
+```console
+$ sshocker run -p 8080:80 -v .:/mnt/sshfs user@example.com
+```
+
+`run` can be ommitted, e.g.
+```console
+$ sshocker -p 8080:80 -v .:/mnt/sshfs user@example.com
+```
+
+Flags:
+* `--ssh-persist=(true|false)` (default: `true`): enable ControlPersit
+* `-v LOCALDIR:REMOTEDIR[:ro]`: Mount a reverse SSHFS
+* `-p [LOCALIP:]LOCALPORT:[REMOTEIP:]REMOTEPORT`: Expose a port
+
+### Subcommand: `help` (default)
+Shows help
+
 ## Known issues
 
 * The shell starts without waiting for completion of reverse-sshfs mounts
