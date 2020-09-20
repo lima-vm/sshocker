@@ -47,6 +47,3 @@ Flags:
 ### Subcommand: `help` (default)
 Shows help
 
-## Known issues
-
-* The shell starts without waiting for completion of reverse-sshfs mounts
