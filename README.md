@@ -39,10 +39,13 @@ $ sshocker run -p 8080:80 -v .:/mnt/sshfs user@example.com
 $ sshocker -p 8080:80 -v .:/mnt/sshfs user@example.com
 ```
 
-Flags:
-* `--ssh-persist=(true|false)` (default: `true`): enable ControlPersit
+Flags (similar to `docker run` flags):
 * `-v LOCALDIR:REMOTEDIR[:ro]`: Mount a reverse SSHFS
 * `-p [LOCALIP:]LOCALPORT:[REMOTEIP:]REMOTEPORT`: Expose a port
+
+SSH flags:
+* `-F`, `--ssh-config=FILE`: specify SSH config file used for `ssh -F`
+* `--ssh-persist=(true|false)` (default: `true`): enable ControlPersit
 
 ### Subcommand: `help` (default)
 Shows help

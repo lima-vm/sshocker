@@ -13,8 +13,8 @@ import (
 )
 
 type SSHConfig struct {
-	Persist bool
-	// TODO: ssh-config, priv key, pub key, ...
+	ConfigFile string
+	Persist    bool
 }
 
 func (c *SSHConfig) Binary() string {
@@ -23,6 +23,9 @@ func (c *SSHConfig) Binary() string {
 
 func (c *SSHConfig) Args() []string {
 	var args []string
+	if c.ConfigFile != "" {
+		args = append(args, "-F", c.ConfigFile)
+	}
 	if c.Persist {
 		args = append(args,
 			"-o", "ControlMaster=auto",

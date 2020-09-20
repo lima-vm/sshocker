@@ -14,6 +14,11 @@ import (
 
 var (
 	runFlags = []cli.Flag{
+		&cli.StringFlag{
+			Name:    "ssh-config",
+			Aliases: []string{"F"},
+			Usage:   "ssh config file",
+		},
 		&cli.BoolFlag{
 			Name:  "ssh-persist",
 			Usage: "enable ControlPersist",
@@ -43,7 +48,8 @@ func runAction(clicontext *cli.Context) error {
 		return errors.New("no host specified")
 	}
 	sshConfig := &ssh.SSHConfig{
-		Persist: clicontext.Bool("ssh-persist"),
+		ConfigFile: clicontext.String("ssh-config"),
+		Persist:    clicontext.Bool("ssh-persist"),
 	}
 	x := &sshocker.Sshocker{
 		SSHConfig: sshConfig,
