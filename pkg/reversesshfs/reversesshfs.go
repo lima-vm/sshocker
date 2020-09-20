@@ -113,15 +113,15 @@ i=0
 while : ; do
   # FIXME: not really robust
   if mount | grep "on ${dir}" | egrep -qw "fuse.sshfs|osxfuse"; then
-		echo '{"return":{}}'
+    echo '{"return":{}}'
     exit 0
   fi
-	sleep 1
-	if [ $i -ge ${max_trial} ]; then
-	  echo >&2 "sshfs does not seem to be mounted on ${dir}"
-		exit 1
-	fi
-	i=$((i + 1))
+  sleep 1
+  if [ $i -ge ${max_trial} ]; then
+    echo >&2 "sshfs does not seem to be mounted on ${dir}"
+    exit 1
+  fi
+  i=$((i + 1))
 done
 `
 	t, err := template.New(scriptName).Parse(scriptTemplate)
