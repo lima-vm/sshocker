@@ -34,7 +34,7 @@ e.g.
 $ sshocker run -p 8080:80 -v .:/mnt/sshfs user@example.com
 ```
 
-`run` can be ommitted, e.g.
+`run` can be omitted, e.g.
 ```console
 $ sshocker -p 8080:80 -v .:/mnt/sshfs user@example.com
 ```
@@ -45,7 +45,7 @@ Flags (similar to `docker run` flags):
 
 SSH flags:
 * `-F`, `--ssh-config=FILE`: specify SSH config file used for `ssh -F`
-* `--ssh-persist=(true|false)` (default: `true`): enable ControlPersit
+* `--ssh-persist=(true|false)` (default: `true`): enable ControlPersist
 
 ### Subcommand: `help`
 Shows help
