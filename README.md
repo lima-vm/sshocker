@@ -41,7 +41,7 @@ $ sshocker -p 8080:80 -v .:/mnt/sshfs user@example.com
 
 Flags (similar to `docker run` flags):
 * `-v LOCALDIR:REMOTEDIR[:ro]`: Mount a reverse SSHFS
-* `-p [LOCALIP:]LOCALPORT:[REMOTEIP:]REMOTEPORT`: Expose a port
+* `-p [[LOCALIP:]LOCALPORT:]REMOTEPORT`: Expose a port
 
 SSH flags:
 * `-F`, `--ssh-config=FILE`: specify SSH config file used for `ssh -F`

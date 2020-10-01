@@ -12,7 +12,7 @@ func newApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = "sshocker"
 	app.Usage = "ssh + reverse sshfs + port forwarder, in Docker-like CLI"
-	app.UsageText = "sshocker run -p LOCALPORT:REMOTEPORT -v LOCALDIR:REMOTEDIR USER@HOST"
+	app.UsageText = "sshocker run -p LOCALIP:LOCALPORT:REMOTEPORT -v LOCALDIR:REMOTEDIR USER@HOST"
 
 	app.Flags = []cli.Flag{
 		&cli.BoolFlag{

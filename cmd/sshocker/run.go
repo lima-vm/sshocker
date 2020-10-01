@@ -123,16 +123,3 @@ func parseFlagV(s string) (mount.Mount, error) {
 	}
 	return m, nil
 }
-
-// parseFlagP parses -p flag, akin to `docker run -p` flags.
-// The returned value conforms to the `ssh -L` syntax
-func parseFlagP(s string) (string, error) {
-	split := strings.Split(s, ":")
-	if len(split) >= 3 {
-		return s, nil
-	}
-	if len(split) == 2 {
-		return split[0] + ":localhost:" + split[1], nil
-	}
-	return "", errors.Errorf("cannot parse %q", s)
-}
