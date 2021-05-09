@@ -3,6 +3,7 @@ package sshocker
 import (
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/AkihiroSuda/sshocker/pkg/mount"
 	"github.com/AkihiroSuda/sshocker/pkg/reversesshfs"
@@ -14,6 +15,7 @@ import (
 type Sshocker struct {
 	*ssh.SSHConfig
 	Host      string   // Required
+	Port      int      // Required
 	Command   []string // Optional
 	Mounts    []mount.Mount
 	LForwards []string
@@ -28,7 +30,7 @@ func (x *Sshocker) Run() error {
 	for _, l := range x.LForwards {
 		args = append(args, "-L", l)
 	}
-	args = append(args, x.Host, "--")
+	args = append(args, "-p", strconv.Itoa(x.Port), x.Host, "--")
 	if len(x.Command) > 0 {
 		args = append(args, x.Command...)
 	}
@@ -44,6 +46,7 @@ func (x *Sshocker) Run() error {
 				SSHConfig:  x.SSHConfig,
 				LocalPath:  m.Source,
 				Host:       x.Host,
+				Port:       x.Port,
 				RemotePath: m.Destination,
 				Readonly:   m.Readonly,
 			}
@@ -66,7 +69,7 @@ func (x *Sshocker) Run() error {
 	}
 	defer func() {
 		if x.SSHConfig.Persist {
-			if emErr := ssh.ExitMaster(x.Host, x.SSHConfig); emErr != nil {
+			if emErr := ssh.ExitMaster(x.Host, x.Port, x.SSHConfig); emErr != nil {
 				logrus.WithError(emErr).Error("failed to exit the master")
 			}
 		}

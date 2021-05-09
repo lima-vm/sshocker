@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 
 	"github.com/AkihiroSuda/sshocker/pkg/ssh"
 	"github.com/AkihiroSuda/sshocker/pkg/util"
@@ -19,6 +20,7 @@ type ReverseSSHFS struct {
 	*ssh.SSHConfig
 	LocalPath  string
 	Host       string
+	Port       int
 	RemotePath string
 	Readonly   bool
 	sshCmd     *exec.Cmd
@@ -30,7 +32,7 @@ func (rsf *ReverseSSHFS) Prepare() error {
 	if !filepath.IsAbs(rsf.RemotePath) {
 		return errors.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
-	sshArgs = append(sshArgs, rsf.Host, "--", "mkdir", "-p", rsf.RemotePath)
+	sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port), rsf.Host, "--", "mkdir", "-p", rsf.RemotePath)
 	sshCmd := exec.Command(sshBinary, sshArgs...)
 	logrus.Debugf("executing ssh for preparing sshfs: %s %v", sshCmd.Path, sshCmd.Args)
 	out, err := sshCmd.CombinedOutput()
@@ -49,7 +51,7 @@ func (rsf *ReverseSSHFS) Start() error {
 	if !filepath.IsAbs(rsf.RemotePath) {
 		return errors.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
-	sshArgs = append(sshArgs, rsf.Host, "--", "sshfs", ":"+rsf.LocalPath, rsf.RemotePath, "-o", "slave")
+	sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port), rsf.Host, "--", "sshfs", ":"+rsf.LocalPath, rsf.RemotePath, "-o", "slave")
 	if rsf.Readonly {
 		sshArgs = append(sshArgs, "-o", "ro")
 	}
@@ -139,7 +141,7 @@ done
 	}
 	script := b.String()
 	logrus.Debugf("generated script %q with map %v: %q", scriptName, m, script)
-	stdout, stderr, err := ssh.ExecuteScript(rsf.Host, rsf.SSHConfig, script, scriptName)
+	stdout, stderr, err := ssh.ExecuteScript(rsf.Host, rsf.Port, rsf.SSHConfig, script, scriptName)
 	logrus.Debugf("executed script %q, stdout=%q, stderr=%q, err=%v", scriptName, stdout, stderr, err)
 	return err
 }

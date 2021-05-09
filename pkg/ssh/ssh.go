@@ -38,17 +38,17 @@ func (c *SSHConfig) Args() []string {
 }
 
 // ExitMaster executes `ssh -O exit`
-func ExitMaster(host string, c *SSHConfig) error {
+func ExitMaster(host string, port int, c *SSHConfig) error {
 	if c == nil {
 		return errors.New("got nil SSHConfig")
 	}
 	args := c.Args()
-	args = append(args, "-O", "exit", host)
+	args = append(args, "-O", "exit", "-p", strconv.Itoa(port), host)
 	cmd := exec.Command(c.Binary(), args...)
 	logrus.Debugf("executing ssh for exiting the master: %s %v", cmd.Path, cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return errors.Wrapf(err, "failed to execute `%s -O exit %s`, out=%q", c.Binary(), host, string(out))
+		return errors.Wrapf(err, "failed to execute `%s -O exit -p %d %s`, out=%q", c.Binary(), port, host, string(out))
 	}
 	return nil
 }
@@ -78,7 +78,7 @@ func parseScriptInterpreter(script string) (string, error) {
 // Returns stdout and stderr.
 //
 // scriptName is used only for readability of error strings.
-func ExecuteScript(host string, c *SSHConfig, script, scriptName string) (string, string, error) {
+func ExecuteScript(host string, port int, c *SSHConfig, script, scriptName string) (string, string, error) {
 	if c == nil {
 		return "", "", errors.New("got nil SSHConfig")
 	}
@@ -88,7 +88,7 @@ func ExecuteScript(host string, c *SSHConfig, script, scriptName string) (string
 	}
 	sshBinary := c.Binary()
 	sshArgs := c.Args()
-	sshArgs = append(sshArgs, host, "--", interpreter)
+	sshArgs = append(sshArgs, "-p", strconv.Itoa(port), host, "--", interpreter)
 	sshCmd := exec.Command(sshBinary, sshArgs...)
 	sshCmd.Stdin = strings.NewReader(script)
 	var stderr bytes.Buffer
