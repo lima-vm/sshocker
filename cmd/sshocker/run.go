@@ -1,8 +1,10 @@
 package main
 
 import (
+	"net"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/AkihiroSuda/sshocker/pkg/mount"
@@ -43,6 +45,23 @@ var (
 	}
 )
 
+func parseHost(s string) (string, int, error) {
+	if !strings.Contains(s, ":") {
+		// FIXME: this check is not valid for IPv6!
+		return s, 22, nil
+	}
+	host, portStr, err := net.SplitHostPort(s)
+	if err != nil {
+		return "", 0, err
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return "", 0, err
+	}
+	// host may contain "user@" prefix.
+	return host, port, nil
+}
+
 func runAction(clicontext *cli.Context) error {
 	if clicontext.NArg() < 1 {
 		return errors.New("no host specified")
@@ -51,9 +70,14 @@ func runAction(clicontext *cli.Context) error {
 		ConfigFile: clicontext.String("ssh-config"),
 		Persist:    clicontext.Bool("ssh-persist"),
 	}
+	host, port, err := parseHost(clicontext.Args().First())
+	if err != nil {
+		return err
+	}
 	x := &sshocker.Sshocker{
 		SSHConfig: sshConfig,
-		Host:      clicontext.Args().First(),
+		Host:      host,
+		Port:      port,
 		Command:   clicontext.Args().Tail(),
 	}
 	if len(x.Command) > 0 && x.Command[0] == "--" {
