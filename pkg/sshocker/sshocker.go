@@ -14,11 +14,12 @@ import (
 
 type Sshocker struct {
 	*ssh.SSHConfig
-	Host      string   // Required
-	Port      int      // Required
-	Command   []string // Optional
-	Mounts    []mount.Mount
-	LForwards []string
+	Host                string   // Required
+	Port                int      // Required
+	Command             []string // Optional
+	Mounts              []mount.Mount
+	LForwards           []string
+	SSHFSAdditionalArgs []string
 }
 
 func (x *Sshocker) Run() error {
@@ -43,12 +44,13 @@ func (x *Sshocker) Run() error {
 		switch m.Type {
 		case mount.MountTypeReverseSSHFS:
 			rsf := &reversesshfs.ReverseSSHFS{
-				SSHConfig:  x.SSHConfig,
-				LocalPath:  m.Source,
-				Host:       x.Host,
-				Port:       x.Port,
-				RemotePath: m.Destination,
-				Readonly:   m.Readonly,
+				SSHConfig:           x.SSHConfig,
+				LocalPath:           m.Source,
+				Host:                x.Host,
+				Port:                x.Port,
+				RemotePath:          m.Destination,
+				Readonly:            m.Readonly,
+				SSHFSAdditionalArgs: x.SSHFSAdditionalArgs,
 			}
 			if err := rsf.Prepare(); err != nil {
 				return errors.Wrapf(err, "failed to prepare mounting %q (local) onto %q (remote)", rsf.LocalPath, rsf.RemotePath)

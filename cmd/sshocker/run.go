@@ -36,6 +36,11 @@ var (
 			Name:  "p",
 			Usage: "Expose a port, e.g. `8080:80` to forward the port 8080 the client onto the port 80 on the server",
 		},
+		&cli.BoolFlag{
+			Name:  "sshfs-nonempty",
+			Usage: "enable sshfs nonempty",
+			Value: false,
+		},
 	}
 	runCommand = &cli.Command{
 		Name:   "run",
@@ -74,11 +79,16 @@ func runAction(clicontext *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	var sshfsAdditionalArgs []string
+	if clicontext.Bool("sshfs-nonempty") {
+		sshfsAdditionalArgs = append(sshfsAdditionalArgs, "-o", "nonempty")
+	}
 	x := &sshocker.Sshocker{
-		SSHConfig: sshConfig,
-		Host:      host,
-		Port:      port,
-		Command:   clicontext.Args().Tail(),
+		SSHConfig:           sshConfig,
+		Host:                host,
+		Port:                port,
+		Command:             clicontext.Args().Tail(),
+		SSHFSAdditionalArgs: sshfsAdditionalArgs,
 	}
 	if len(x.Command) > 0 && x.Command[0] == "--" {
 		x.Command = x.Command[1:]

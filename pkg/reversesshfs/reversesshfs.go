@@ -18,12 +18,13 @@ import (
 
 type ReverseSSHFS struct {
 	*ssh.SSHConfig
-	LocalPath  string
-	Host       string
-	Port       int
-	RemotePath string
-	Readonly   bool
-	sshCmd     *exec.Cmd
+	LocalPath           string
+	Host                string
+	Port                int
+	RemotePath          string
+	Readonly            bool
+	sshCmd              *exec.Cmd
+	SSHFSAdditionalArgs []string
 }
 
 func (rsf *ReverseSSHFS) Prepare() error {
@@ -55,6 +56,7 @@ func (rsf *ReverseSSHFS) Start() error {
 	if rsf.Readonly {
 		sshArgs = append(sshArgs, "-o", "ro")
 	}
+	sshArgs = append(sshArgs, rsf.SSHFSAdditionalArgs...)
 	rsf.sshCmd = exec.Command(sshBinary, sshArgs...)
 	rsf.sshCmd.Stderr = os.Stderr
 	stdinPipe, err := rsf.sshCmd.StdinPipe()
