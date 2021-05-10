@@ -21,7 +21,7 @@ echo "Hello world"
 		},
 	}
 	for i, tc := range testCases {
-		got, err := parseScriptInterpreter(tc.script)
+		got, err := ParseScriptInterpreter(tc.script)
 		if tc.expected != "" {
 			if err != nil {
 				t.Errorf("#%d: %v", i, err)

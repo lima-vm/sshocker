@@ -13,8 +13,9 @@ import (
 )
 
 type SSHConfig struct {
-	ConfigFile string
-	Persist    bool
+	ConfigFile     string
+	Persist        bool
+	AdditionalArgs []string
 }
 
 func (c *SSHConfig) Binary() string {
@@ -34,6 +35,7 @@ func (c *SSHConfig) Args() []string {
 			"-o", "ControlPersist=yes",
 		)
 	}
+	args = append(args, c.AdditionalArgs...)
 	return args
 }
 
@@ -53,9 +55,9 @@ func ExitMaster(host string, port int, c *SSHConfig) error {
 	return nil
 }
 
-// parseScriptInterpreter extracts "#!/bin/sh" interpreter string from the script.
+// ParseScriptInterpreter extracts "#!/bin/sh" interpreter string from the script.
 // The result does not contain the "#!" prefix.
-func parseScriptInterpreter(script string) (string, error) {
+func ParseScriptInterpreter(script string) (string, error) {
 	r := bufio.NewReader(strings.NewReader(script))
 	firstLine, partial, err := r.ReadLine()
 	if err != nil {
@@ -82,7 +84,7 @@ func ExecuteScript(host string, port int, c *SSHConfig, script, scriptName strin
 	if c == nil {
 		return "", "", errors.New("got nil SSHConfig")
 	}
-	interpreter, err := parseScriptInterpreter(script)
+	interpreter, err := ParseScriptInterpreter(script)
 	if err != nil {
 		return "", "", err
 	}
