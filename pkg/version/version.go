@@ -1,3 +1,6 @@
 package version
 
-const Version = "0.1.0+dev"
+var (
+	// Version is filled on compilation time
+	Version = "<unknown>"
+)

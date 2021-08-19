@@ -20,7 +20,8 @@ chmod +x sshocker
 
 To compile from source:
 ```console
-go get github.com/lima-vm/sshocker/cmd/sshocker
+make
+sudo make install
 ```
 
 Tested on macOS client and Linux server. May not work on other environments, especially on Windows.
