@@ -1,4 +1,4 @@
-module github.com/AkihiroSuda/sshocker
+module github.com/lima-vm/sshocker
 
 go 1.17
 

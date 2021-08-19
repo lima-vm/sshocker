@@ -20,15 +20,15 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v2
       with:
-        path: go/src/github.com/AkihiroSuda/sshocker
+        path: go/src/github.com/lima-vm/sshocker
     - name: "Compile binaries"
-      working-directory:  go/src/github.com/AkihiroSuda/sshocker
+      working-directory:  go/src/github.com/lima-vm/sshocker
       run: make cross
     - name: "SHA256SUMS"
-      working-directory:  go/src/github.com/AkihiroSuda/sshocker
+      working-directory:  go/src/github.com/lima-vm/sshocker
       run: ( cd ./bin; sha256sum sshocker-* ) | tee /tmp/SHA256SUMS
     - name: "Prepare the release note"
-      working-directory:  go/src/github.com/AkihiroSuda/sshocker
+      working-directory:  go/src/github.com/lima-vm/sshocker
       run: |
         tag="${GITHUB_REF##*/}"
         cat << EOF | tee /tmp/release-note.txt
@@ -49,7 +49,7 @@ jobs:
         https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         EOF
     - name: "Create release"
-      working-directory:  go/src/github.com/AkihiroSuda/sshocker
+      working-directory:  go/src/github.com/lima-vm/sshocker
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |

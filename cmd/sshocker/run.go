@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AkihiroSuda/sshocker/pkg/mount"
-	"github.com/AkihiroSuda/sshocker/pkg/ssh"
-	"github.com/AkihiroSuda/sshocker/pkg/sshocker"
+	"github.com/lima-vm/sshocker/pkg/mount"
+	"github.com/lima-vm/sshocker/pkg/ssh"
+	"github.com/lima-vm/sshocker/pkg/sshocker"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 )

@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/AkihiroSuda/sshocker/pkg/ssh"
-	"github.com/AkihiroSuda/sshocker/pkg/util"
+	"github.com/lima-vm/sshocker/pkg/ssh"
+	"github.com/lima-vm/sshocker/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/pkg/sftp"
 	"github.com/sirupsen/logrus"
