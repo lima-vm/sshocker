@@ -9,7 +9,7 @@ jobs:
   main:
     strategy:
       matrix:
-        go-version: [1.15.x]
+        go-version: [1.16.x, 1.17.x]
         platform: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -18,6 +18,7 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v2
       with:
-        path: go/src/github.com/AkihiroSuda/sshocker
-    - run: go get github.com/AkihiroSuda/sshocker/cmd/sshocker
-    - run: go test -covermode=atomic -race -v github.com/AkihiroSuda/sshocker/...
+        fetch-depth: 1
+    - run: make
+    - run: sudo make install
+    - run: go test -covermode=atomic -race -v ./...
