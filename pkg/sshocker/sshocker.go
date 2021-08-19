@@ -5,9 +5,9 @@ import (
 	"os/exec"
 	"strconv"
 
-	"github.com/AkihiroSuda/sshocker/pkg/mount"
-	"github.com/AkihiroSuda/sshocker/pkg/reversesshfs"
-	"github.com/AkihiroSuda/sshocker/pkg/ssh"
+	"github.com/lima-vm/sshocker/pkg/mount"
+	"github.com/lima-vm/sshocker/pkg/reversesshfs"
+	"github.com/lima-vm/sshocker/pkg/ssh"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

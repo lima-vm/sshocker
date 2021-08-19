@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/AkihiroSuda/sshocker/pkg/version"
+	"github.com/lima-vm/sshocker/pkg/version"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

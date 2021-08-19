@@ -10,17 +10,18 @@ This is akin to `docker run -p 8080:80 -v $(pwd):/mnt IMAGE`, but `sshocker` is 
 
 ## Install
 
-Download from https://github.com/AkihiroSuda/sshocker/releases .
+Download from https://github.com/lima-vm/sshocker/releases .
 
 To download using curl:
 ```
-curl -o sshocker --fail -L https://github.com/AkihiroSuda/sshocker/releases/latest/download/sshocker-$(uname -s)-$(uname -m)
+curl -o sshocker --fail -L https://github.com/lima-vm/sshocker/releases/latest/download/sshocker-$(uname -s)-$(uname -m)
 chmod +x sshocker
 ```
 
 To compile from source:
 ```console
-go get github.com/AkihiroSuda/sshocker/cmd/sshocker
+make
+sudo make install
 ```
 
 Tested on macOS client and Linux server. May not work on other environments, especially on Windows.
