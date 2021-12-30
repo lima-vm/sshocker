@@ -31,7 +31,10 @@ func (x *Sshocker) Run() error {
 	for _, l := range x.LForwards {
 		args = append(args, "-L", l)
 	}
-	args = append(args, "-p", strconv.Itoa(x.Port), x.Host, "--")
+	if x.Port != 0 {
+		args = append(args, "-p", strconv.Itoa(x.Port))
+	}
+	args = append(args, x.Host, "--")
 	if len(x.Command) > 0 {
 		args = append(args, x.Command...)
 	}
