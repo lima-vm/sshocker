@@ -20,9 +20,10 @@ type Sshocker struct {
 	Mounts              []mount.Mount
 	LForwards           []string
 	SSHFSAdditionalArgs []string
+	cmd *exec.Cmd
 }
 
-func (x *Sshocker) Run() error {
+func (x *Sshocker) setup() error {
 	if x.SSHConfig == nil {
 		return errors.New("got nil SSHConfig")
 	}
@@ -76,9 +77,29 @@ func (x *Sshocker) Run() error {
 			}
 		}
 	}()
-	logrus.Debugf("executing main SSH: %s %v", cmd.Path, cmd.Args)
-	if err := cmd.Run(); err != nil {
+	x.cmd = cmd
+	return nil
+}
+
+func (x *Sshocker) Run() error {
+	if err := x.setup(); err != nil {
 		return err
 	}
-	return nil
+	logrus.Debugf("executing main SSH: %s %v", x.cmd.Path, x.cmd.Args)
+	return x.cmd.Run()
+}
+
+func (x *Sshocker) Start() error {
+	if err := x.setup(); err != nil {
+		return err
+	}
+	logrus.Debugf("executing main SSH: %s %v", x.cmd.Path, x.cmd.Args)
+	return x.cmd.Start()
+}
+
+func (x *Sshocker) Wait() error {
+	if x.cmd == nil {
+		return errors.New("got nil Cmd")
+	}
+	return x.cmd.Wait()
 }
