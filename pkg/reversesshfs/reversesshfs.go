@@ -2,6 +2,8 @@ package reversesshfs
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -11,7 +13,6 @@ import (
 
 	"github.com/lima-vm/sshocker/pkg/ssh"
 	"github.com/lima-vm/sshocker/pkg/util"
-	"github.com/pkg/errors"
 	"github.com/pkg/sftp"
 	"github.com/sirupsen/logrus"
 )
@@ -31,7 +32,7 @@ func (rsf *ReverseSSHFS) Prepare() error {
 	sshBinary := rsf.SSHConfig.Binary()
 	sshArgs := rsf.SSHConfig.Args()
 	if !filepath.IsAbs(rsf.RemotePath) {
-		return errors.Errorf("unexpected relative path: %q", rsf.RemotePath)
+		return fmt.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
 	if rsf.Port != 0 {
 		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))
@@ -42,7 +43,7 @@ func (rsf *ReverseSSHFS) Prepare() error {
 	logrus.Debugf("executing ssh for preparing sshfs: %s %v", sshCmd.Path, sshCmd.Args)
 	out, err := sshCmd.CombinedOutput()
 	if err != nil {
-		return errors.Wrapf(err, "failed to mkdir %q (remote): %q", rsf.RemotePath, string(out))
+		return fmt.Errorf("failed to mkdir %q (remote): %q: %w", rsf.RemotePath, string(out), err)
 	}
 	return nil
 }
@@ -51,10 +52,10 @@ func (rsf *ReverseSSHFS) Start() error {
 	sshBinary := rsf.SSHConfig.Binary()
 	sshArgs := rsf.SSHConfig.Args()
 	if !filepath.IsAbs(rsf.LocalPath) {
-		return errors.Errorf("unexpected relative path: %q", rsf.LocalPath)
+		return fmt.Errorf("unexpected relative path: %q", rsf.LocalPath)
 	}
 	if !filepath.IsAbs(rsf.RemotePath) {
-		return errors.Errorf("unexpected relative path: %q", rsf.RemotePath)
+		return fmt.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
 	if rsf.Port != 0 {
 		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))

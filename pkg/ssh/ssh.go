@@ -3,12 +3,13 @@ package ssh
 import (
 	"bufio"
 	"bytes"
+	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,7 +55,7 @@ func ExitMaster(host string, port int, c *SSHConfig) error {
 	logrus.Debugf("executing ssh for exiting the master: %s %v", cmd.Path, cmd.Args)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return errors.Wrapf(err, "failed to execute `%s -O exit -p %d %s`, out=%q", c.Binary(), port, host, string(out))
+		return fmt.Errorf("failed to execute `%s -O exit -p %d %s`, out=%q: %w", c.Binary(), port, host, string(out), err)
 	}
 	return nil
 }
@@ -65,17 +66,17 @@ func ParseScriptInterpreter(script string) (string, error) {
 	r := bufio.NewReader(strings.NewReader(script))
 	firstLine, partial, err := r.ReadLine()
 	if err != nil {
-		return "", errors.Wrapf(err, "cannot determine interpreter from script %q", script)
+		return "", fmt.Errorf("cannot determine interpreter from script %q: %w", script, err)
 	}
 	if partial {
-		return "", errors.Errorf("cannot determine interpreter from script %q: cannot read the first line", script)
+		return "", fmt.Errorf("cannot determine interpreter from script %q: cannot read the first line", script)
 	}
 	if !strings.HasPrefix(string(firstLine), "#!") {
-		return "", errors.Errorf("cannot determine interpreter from script %q: the first line lacks `#!`", script)
+		return "", fmt.Errorf("cannot determine interpreter from script %q: the first line lacks `#!`", script)
 	}
 	interp := strings.TrimPrefix(string(firstLine), "#!")
 	if interp == "" {
-		return "", errors.Errorf("cannot determine interpreter from script %q: empty?", script)
+		return "", fmt.Errorf("cannot determine interpreter from script %q: empty?", script)
 	}
 	return interp, nil
 }
@@ -105,8 +106,7 @@ func ExecuteScript(host string, port int, c *SSHConfig, script, scriptName strin
 	logrus.Debugf("executing ssh for script %q: %s %v", scriptName, sshCmd.Path, sshCmd.Args)
 	out, err := sshCmd.Output()
 	if err != nil {
-		return string(out), stderr.String(), errors.Wrapf(err, "failed to execute script %q: stdout=%q, stderr=%q",
-			scriptName, string(out), stderr.String())
+		return string(out), stderr.String(), fmt.Errorf("failed to execute script %q: stdout=%q, stderr=%q: %w", scriptName, string(out), stderr.String(), err)
 	}
 	return string(out), stderr.String(), nil
 }

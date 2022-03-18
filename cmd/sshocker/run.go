@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"os/user"
 	"path/filepath"
@@ -10,7 +12,6 @@ import (
 	"github.com/lima-vm/sshocker/pkg/mount"
 	"github.com/lima-vm/sshocker/pkg/ssh"
 	"github.com/lima-vm/sshocker/pkg/sshocker"
-	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
 )
 
@@ -145,15 +146,15 @@ func parseFlagV(s string) (mount.Mount, error) {
 		if split[2] == "ro" {
 			m.Readonly = true
 		} else {
-			return m, errors.Errorf("cannot parse %q: unknown option %q", s, split[2])
+			return m, fmt.Errorf("cannot parse %q: unknown option %q", s, split[2])
 		}
 	default:
-		return m, errors.Errorf("cannot parse %q", s)
+		return m, fmt.Errorf("cannot parse %q", s)
 	}
 	var err error
 	m.Source, err = expandLocalPath(m.Source)
 	if err != nil {
-		return m, errors.Wrapf(err, "cannot use %q", s)
+		return m, fmt.Errorf("cannot use %q: %w", s, err)
 	}
 	return m, nil
 }
