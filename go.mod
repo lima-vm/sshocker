@@ -14,6 +14,6 @@ require (
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
-	golang.org/x/sys v0.0.0-20210818153620-00dd8d7831e7 // indirect
+	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd // indirect
+	golang.org/x/sys v0.0.0-20220317061510-51cd9980dadf // indirect
 )
