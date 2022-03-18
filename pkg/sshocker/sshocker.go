@@ -1,6 +1,8 @@
 package sshocker
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -8,7 +10,6 @@ import (
 	"github.com/lima-vm/sshocker/pkg/mount"
 	"github.com/lima-vm/sshocker/pkg/reversesshfs"
 	"github.com/lima-vm/sshocker/pkg/ssh"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -56,10 +57,10 @@ func (x *Sshocker) Run() error {
 				SSHFSAdditionalArgs: x.SSHFSAdditionalArgs,
 			}
 			if err := rsf.Prepare(); err != nil {
-				return errors.Wrapf(err, "failed to prepare mounting %q (local) onto %q (remote)", rsf.LocalPath, rsf.RemotePath)
+				return fmt.Errorf("failed to prepare mounting %q (local) onto %q (remote): %w", rsf.LocalPath, rsf.RemotePath, err)
 			}
 			if err := rsf.Start(); err != nil {
-				return errors.Wrapf(err, "failed to mount %q (local) onto %q (remote)", rsf.LocalPath, rsf.RemotePath)
+				return fmt.Errorf("failed to mount %q (local) onto %q (remote): %w", rsf.LocalPath, rsf.RemotePath, err)
 			}
 			defer func() {
 				if cErr := rsf.Close(); cErr != nil {
@@ -67,9 +68,9 @@ func (x *Sshocker) Run() error {
 				}
 			}()
 		case mount.MountTypeInvalid:
-			return errors.Errorf("invalid mount type %v", m.Type)
+			return fmt.Errorf("invalid mount type %v", m.Type)
 		default:
-			return errors.Errorf("unknown mount type %v", m.Type)
+			return fmt.Errorf("unknown mount type %v", m.Type)
 		}
 	}
 	defer func() {
