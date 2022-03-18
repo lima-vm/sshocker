@@ -33,7 +33,11 @@ func (rsf *ReverseSSHFS) Prepare() error {
 	if !filepath.IsAbs(rsf.RemotePath) {
 		return errors.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
-	sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port), rsf.Host, "--", "mkdir", "-p", rsf.RemotePath)
+	if rsf.Port != 0 {
+		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))
+	}
+	sshArgs = append(sshArgs, rsf.Host, "--")
+	sshArgs = append(sshArgs, "mkdir", "-p", rsf.RemotePath)
 	sshCmd := exec.Command(sshBinary, sshArgs...)
 	logrus.Debugf("executing ssh for preparing sshfs: %s %v", sshCmd.Path, sshCmd.Args)
 	out, err := sshCmd.CombinedOutput()
@@ -52,7 +56,11 @@ func (rsf *ReverseSSHFS) Start() error {
 	if !filepath.IsAbs(rsf.RemotePath) {
 		return errors.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
-	sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port), rsf.Host, "--", "sshfs", ":"+rsf.LocalPath, rsf.RemotePath, "-o", "slave")
+	if rsf.Port != 0 {
+		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))
+	}
+	sshArgs = append(sshArgs, rsf.Host, "--")
+	sshArgs = append(sshArgs, "sshfs", ":"+rsf.LocalPath, rsf.RemotePath, "-o", "slave")
 	if rsf.Readonly {
 		sshArgs = append(sshArgs, "-o", "ro")
 	}

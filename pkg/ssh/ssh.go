@@ -45,7 +45,11 @@ func ExitMaster(host string, port int, c *SSHConfig) error {
 		return errors.New("got nil SSHConfig")
 	}
 	args := c.Args()
-	args = append(args, "-O", "exit", "-p", strconv.Itoa(port), host)
+	args = append(args, "-O", "exit")
+	if port != 0 {
+		args = append(args, "-p", strconv.Itoa(port))
+	}
+	args = append(args, host)
 	cmd := exec.Command(c.Binary(), args...)
 	logrus.Debugf("executing ssh for exiting the master: %s %v", cmd.Path, cmd.Args)
 	out, err := cmd.CombinedOutput()
@@ -90,7 +94,10 @@ func ExecuteScript(host string, port int, c *SSHConfig, script, scriptName strin
 	}
 	sshBinary := c.Binary()
 	sshArgs := c.Args()
-	sshArgs = append(sshArgs, "-p", strconv.Itoa(port), host, "--", interpreter)
+	if port != 0 {
+		sshArgs = append(sshArgs, "-p", strconv.Itoa(port))
+	}
+	sshArgs = append(sshArgs, host, "--", interpreter)
 	sshCmd := exec.Command(sshBinary, sshArgs...)
 	sshCmd.Stdin = strings.NewReader(script)
 	var stderr bytes.Buffer

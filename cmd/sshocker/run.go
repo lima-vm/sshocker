@@ -53,7 +53,7 @@ var (
 func parseHost(s string) (string, int, error) {
 	if !strings.Contains(s, ":") {
 		// FIXME: this check is not valid for IPv6!
-		return s, 22, nil
+		return s, 0, nil
 	}
 	host, portStr, err := net.SplitHostPort(s)
 	if err != nil {
