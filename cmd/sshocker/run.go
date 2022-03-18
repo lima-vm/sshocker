@@ -42,6 +42,16 @@ var (
 			Usage: "enable sshfs nonempty",
 			Value: false,
 		},
+		&cli.StringFlag{
+			Name:  "driver",
+			Usage: "SFTP server driver. \"builtin\" (legacy) or \"openssh-sftp-server\" (robust and secure, recommended), automatically chosen by default",
+			Value: "auto",
+		},
+		&cli.StringFlag{
+			Name:  "openssh-sftp-server",
+			Usage: "OpenSSH SFTP Server binary, automatically chosen by default",
+			Value: "",
+		},
 	}
 	runCommand = &cli.Command{
 		Name:   "run",
@@ -85,11 +95,13 @@ func runAction(clicontext *cli.Context) error {
 		sshfsAdditionalArgs = append(sshfsAdditionalArgs, "-o", "nonempty")
 	}
 	x := &sshocker.Sshocker{
-		SSHConfig:           sshConfig,
-		Host:                host,
-		Port:                port,
-		Command:             clicontext.Args().Tail(),
-		SSHFSAdditionalArgs: sshfsAdditionalArgs,
+		SSHConfig:               sshConfig,
+		Host:                    host,
+		Port:                    port,
+		Command:                 clicontext.Args().Tail(),
+		SSHFSAdditionalArgs:     sshfsAdditionalArgs,
+		Driver:                  clicontext.String("driver"),
+		OpensshSftpServerBinary: clicontext.String("openssh-sftp-server"),
 	}
 	if len(x.Command) > 0 && x.Command[0] == "--" {
 		x.Command = x.Command[1:]

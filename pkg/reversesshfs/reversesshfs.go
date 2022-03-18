@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/lima-vm/sshocker/pkg/ssh"
 	"github.com/lima-vm/sshocker/pkg/util"
@@ -17,15 +18,26 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type Driver = string
+
+const (
+	DriverAuto              = Driver("auto")                // Default
+	DriverBuiltin           = Driver("builtin")             // Legacy. Unrecommended.
+	DriverOpensshSftpServer = Driver("openssh-sftp-server") // More robust and secure. Recommended.
+)
+
 type ReverseSSHFS struct {
 	*ssh.SSHConfig
-	LocalPath           string
-	Host                string
-	Port                int
-	RemotePath          string
-	Readonly            bool
-	sshCmd              *exec.Cmd
-	SSHFSAdditionalArgs []string
+	Driver                  Driver
+	OpensshSftpServerBinary string // used only when Driver == DriverOpensshSftpServer
+	LocalPath               string
+	Host                    string
+	Port                    int
+	RemotePath              string
+	Readonly                bool
+	sshCmd                  *exec.Cmd
+	opensshSftpServerCmd    *exec.Cmd
+	SSHFSAdditionalArgs     []string
 }
 
 func (rsf *ReverseSSHFS) Prepare() error {
@@ -48,6 +60,55 @@ func (rsf *ReverseSSHFS) Prepare() error {
 	return nil
 }
 
+func DetectOpensshSftpServerBinary() string {
+	homebrewSSHD := []string{
+		"/usr/local/sbin/sshd",
+		"/opt/homebrew/sbin/sshd",
+	}
+	for _, f := range homebrewSSHD {
+		// sshd is like "/usr/local/Cellar/openssh/8.9p1/sbin/sshd"
+		sshd, err := filepath.EvalSymlinks(f)
+		if err != nil {
+			continue
+		}
+		// local is like "/usr/local/Cellar/openssh"
+		local := filepath.Dir(filepath.Dir(sshd))
+		// sftpServer is like "/usr/local/Cellar/openssh/8.9p1/libexec/sftp-server"
+		sftpServer := filepath.Join(local, "libexec", "sftp-server")
+		if exe, err := exec.LookPath(sftpServer); err == nil {
+			return exe
+		}
+	}
+	candidates := []string{
+		"/usr/libexec/sftp-server",         // macOS, OpenWrt
+		"/usr/libexec/openssh/sftp-server", // Fedora
+		"/usr/lib/sftp-server",             // Debian (symlink to openssh/sftp-server)
+		"/usr/lib/openssh/sftp-server",     // Debian
+		"/usr/lib/ssh/sftp-server",         // Alpine
+	}
+	for _, cand := range candidates {
+		if exe, err := exec.LookPath(cand); err == nil {
+			return exe
+		}
+	}
+	return ""
+}
+
+func DetectDriver(explicitOpensshSftpServerBinary string) (Driver, string, error) {
+	if explicitOpensshSftpServerBinary != "" {
+		exe, err := exec.LookPath(explicitOpensshSftpServerBinary)
+		if err != nil {
+			return "", "", err
+		}
+		return DriverOpensshSftpServer, exe, nil
+	}
+	exe := DetectOpensshSftpServerBinary()
+	if exe != "" {
+		return DriverOpensshSftpServer, exe, nil
+	}
+	return DriverBuiltin, "", nil
+}
+
 func (rsf *ReverseSSHFS) Start() error {
 	sshBinary := rsf.SSHConfig.Binary()
 	sshArgs := rsf.SSHConfig.Args()
@@ -68,44 +129,103 @@ func (rsf *ReverseSSHFS) Start() error {
 	sshArgs = append(sshArgs, rsf.SSHFSAdditionalArgs...)
 	rsf.sshCmd = exec.Command(sshBinary, sshArgs...)
 	rsf.sshCmd.Stderr = os.Stderr
-	stdinPipe, err := rsf.sshCmd.StdinPipe()
-	if err != nil {
-		return err
+	driver := rsf.Driver
+	opensshSftpServerBinary := rsf.OpensshSftpServerBinary
+	switch driver {
+	case DriverBuiltin, DriverOpensshSftpServer:
+		// NOP
+	case "", DriverAuto:
+		var err error
+		driver, opensshSftpServerBinary, err = DetectDriver(opensshSftpServerBinary)
+		if err != nil {
+			return fmt.Errorf("failed to choose driver automatically: %w", err)
+		}
+		logrus.Debugf("Chosen driver %q", driver)
+	default:
+		return fmt.Errorf("unknown driver %q", driver)
 	}
-	stdoutPipe, err := rsf.sshCmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	stdio := &util.RWC{
-		ReadCloser:  stdoutPipe,
-		WriteCloser: stdinPipe,
-	}
-	var sftpOpts []sftp.ServerOption
-	if rsf.Readonly {
-		sftpOpts = append(sftpOpts, sftp.ReadOnly())
-	}
-	// NOTE: sftp.NewServer doesn't support specifying the root.
-	// https://github.com/pkg/sftp/pull/238
-	//
-	// TODO: use sftp.NewRequestServer with custom handlers to mitigate potential vulnerabilities.
-	server, err := sftp.NewServer(stdio, sftpOpts...)
-	if err != nil {
-		return err
+	var builtinSftpServer *sftp.Server
+	switch driver {
+	case DriverBuiltin:
+		stdinPipe, err := rsf.sshCmd.StdinPipe()
+		if err != nil {
+			return err
+		}
+		stdoutPipe, err := rsf.sshCmd.StdoutPipe()
+		if err != nil {
+			return err
+		}
+		stdio := &util.RWC{
+			ReadCloser:  stdoutPipe,
+			WriteCloser: stdinPipe,
+		}
+		var sftpOpts []sftp.ServerOption
+		if rsf.Readonly {
+			sftpOpts = append(sftpOpts, sftp.ReadOnly())
+		}
+		// NOTE: sftp.NewServer doesn't support specifying the root.
+		// https://github.com/pkg/sftp/pull/238
+		//
+		// TODO: use sftp.NewRequestServer with custom handlers to mitigate potential vulnerabilities.
+		builtinSftpServer, err = sftp.NewServer(stdio, sftpOpts...)
+		if err != nil {
+			return err
+		}
+	case DriverOpensshSftpServer:
+		if opensshSftpServerBinary == "" {
+			opensshSftpServerBinary = DetectOpensshSftpServerBinary()
+			if opensshSftpServerBinary == "" {
+				return errors.New("no openssh sftp-server found")
+			}
+		}
+		logrus.Debugf("Using OpenSSH SFTP Server %q", opensshSftpServerBinary)
+		sftpServerArgs := []string{
+			// `-e` available since OpenSSH 5.4p1 (2010) https://github.com/openssh/openssh-portable/commit/7bee06ab
+			"-e",
+			// `-d` available since OpenSSH 6.2p1 (2013) https://github.com/openssh/openssh-portable/commit/502ab0ef
+			// NOTE: `-d` just chdirs the sftp server process to the specified directory.
+			// This is expected to be used in conjunction with chroot (in future), however, macOS does not support unprivileged chroot.
+			"-d", strings.ReplaceAll(rsf.LocalPath, "%", "%%"),
+		}
+		if rsf.Readonly {
+			// `-R` available since OpenSSH 5.4p1 (2010) https://github.com/openssh/openssh-portable/commit/db7bf825
+			sftpServerArgs = append(sftpServerArgs, "-R")
+		}
+		rsf.opensshSftpServerCmd = exec.Command(opensshSftpServerBinary, sftpServerArgs...)
+		rsf.opensshSftpServerCmd.Stderr = os.Stderr
+		var err error
+		rsf.opensshSftpServerCmd.Stdin, err = rsf.sshCmd.StdoutPipe()
+		if err != nil {
+			return err
+		}
+		rsf.sshCmd.Stdin, err = rsf.opensshSftpServerCmd.StdoutPipe()
+		if err != nil {
+			return err
+		}
 	}
 	logrus.Debugf("executing ssh for remote sshfs: %s %v", rsf.sshCmd.Path, rsf.sshCmd.Args)
 	if err := rsf.sshCmd.Start(); err != nil {
 		return err
 	}
 	logrus.Debugf("starting sftp server for %v", rsf.LocalPath)
-	go func() {
-		if srvErr := server.Serve(); srvErr != nil {
-			if errors.Is(srvErr, io.EOF) {
-				logrus.WithError(srvErr).Debugf("sftp server for %v exited with EOF (negligible)", rsf.LocalPath)
-			} else {
-				logrus.WithError(srvErr).Errorf("sftp server for %v exited", rsf.LocalPath)
+	switch driver {
+	case DriverBuiltin:
+		go func() {
+			if srvErr := builtinSftpServer.Serve(); srvErr != nil {
+				if errors.Is(srvErr, io.EOF) {
+					logrus.WithError(srvErr).Debugf("sftp server for %v exited with EOF (negligible)", rsf.LocalPath)
+				} else {
+					logrus.WithError(srvErr).Errorf("sftp server for %v exited", rsf.LocalPath)
+				}
 			}
+		}()
+	case DriverOpensshSftpServer:
+		logrus.Debugf("executing OpenSSH SFTP Server: %s %v", rsf.opensshSftpServerCmd.Path, rsf.opensshSftpServerCmd.Args)
+		if err := rsf.opensshSftpServerCmd.Start(); err != nil {
+			return err
 		}
-	}()
+	}
+	logrus.Debugf("waiting for remote ready")
 	if err := rsf.waitForRemoteReady(); err != nil {
 		// not a fatal error
 		logrus.WithError(err).Warnf("failed to confirm whether %v [remote] is successfully mounted", rsf.RemotePath)
@@ -158,9 +278,20 @@ done
 }
 
 func (rsf *ReverseSSHFS) Close() error {
-	logrus.Debugf("killing ssh server for remote sshfs: %s %v", rsf.sshCmd.Path, rsf.sshCmd.Args)
-	if err := rsf.sshCmd.Process.Kill(); err != nil {
-		return err
+	logrus.Debugf("killing processes for remote sshfs: %s %v", rsf.sshCmd.Path, rsf.sshCmd.Args)
+	var errors []error
+	if rsf.sshCmd != nil && rsf.sshCmd.Process != nil {
+		if err := rsf.sshCmd.Process.Kill(); err != nil {
+			errors = append(errors, err)
+		}
+	}
+	if rsf.opensshSftpServerCmd != nil && rsf.opensshSftpServerCmd.Process != nil {
+		if err := rsf.opensshSftpServerCmd.Process.Kill(); err != nil {
+			errors = append(errors, err)
+		}
+	}
+	if len(errors) > 0 {
+		return fmt.Errorf("%v", errors)
 	}
 	return nil
 }
