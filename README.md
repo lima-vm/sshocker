@@ -57,6 +57,15 @@ SSH flags:
 * `-F`, `--ssh-config=FILE`: specify SSH config file used for `ssh -F`
 * `--ssh-persist=(true|false)` (default: `true`): enable ControlPersist
 
+SSHFS flags:
+* `--sshfs-noempty` (default: `false`): enable sshfs nonempty
+
+SFTP server flags:
+* `--driver=DRIVER` (default: `auto`): SFTP server driver. `builtin` (legacy) or `openssh-sftp-server` (robust and secure, recommended).
+   `openssh-sftp-server` is chosen by default when the OpenSSH SFTP Server binary is detected.
+* `--openssh-sftp-server=BINARY`: OpenSSH SFTP Server binary.
+   Automatically detected when installed in well-known locations such as `/usr/libexec/sftp-server`.
+
 ### Subcommand: `help`
 Shows help
 
