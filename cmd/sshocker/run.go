@@ -43,6 +43,11 @@ var (
 			Value: false,
 		},
 		&cli.StringFlag{
+			Name:  "sshfs-idmap",
+			Usage: "set sshfs idmap option",
+			Value: "none",
+		},
+		&cli.StringFlag{
 			Name:  "driver",
 			Usage: "SFTP server driver. \"builtin\" (legacy) or \"openssh-sftp-server\" (robust and secure, recommended), automatically chosen by default",
 			Value: "auto",
@@ -94,6 +99,7 @@ func runAction(clicontext *cli.Context) error {
 	if clicontext.Bool("sshfs-nonempty") {
 		sshfsAdditionalArgs = append(sshfsAdditionalArgs, "-o", "nonempty")
 	}
+	sshfsAdditionalArgs = append(sshfsAdditionalArgs, "-o", "idmap="+clicontext.String("sshfs-idmap"))
 	x := &sshocker.Sshocker{
 		SSHConfig:               sshConfig,
 		Host:                    host,
