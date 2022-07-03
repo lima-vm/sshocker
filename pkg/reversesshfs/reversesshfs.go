@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -43,7 +44,7 @@ type ReverseSSHFS struct {
 func (rsf *ReverseSSHFS) Prepare() error {
 	sshBinary := rsf.SSHConfig.Binary()
 	sshArgs := rsf.SSHConfig.Args()
-	if !filepath.IsAbs(rsf.RemotePath) {
+	if !path.IsAbs(rsf.RemotePath) {
 		return fmt.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
 	if rsf.Port != 0 {
@@ -115,7 +116,7 @@ func (rsf *ReverseSSHFS) Start() error {
 	if !filepath.IsAbs(rsf.LocalPath) {
 		return fmt.Errorf("unexpected relative path: %q", rsf.LocalPath)
 	}
-	if !filepath.IsAbs(rsf.RemotePath) {
+	if !path.IsAbs(rsf.RemotePath) {
 		return fmt.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
 	if rsf.Port != 0 {
