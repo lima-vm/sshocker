@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -77,6 +78,17 @@ func DetectOpensshSftpServerBinary() string {
 		sftpServer := filepath.Join(local, "libexec", "sftp-server")
 		if exe, err := exec.LookPath(sftpServer); err == nil {
 			return exe
+		}
+	}
+	if runtime.GOOS == "windows" {
+		// unix path is like "/usr/lib/ssh/sftp-server"
+		cygpathCmd := exec.Command("cygpath", "-w", "/usr/lib/ssh/sftp-server")
+		// windows path is like `C:\msys64\usr\lib\ssh\sftp-server.exe`
+		if out, err := cygpathCmd.Output(); err == nil {
+			sftpServer := strings.TrimSpace(string(out))
+			if exe, err := exec.LookPath(sftpServer); err == nil {
+				return exe
+			}
 		}
 	}
 	candidates := []string{
