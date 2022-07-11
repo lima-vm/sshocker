@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/pkg/sftp v1.13.5
 	github.com/sirupsen/logrus v1.8.1
-	github.com/urfave/cli/v2 v2.10.3
+	github.com/urfave/cli/v2 v2.11.0
 )
 
 require (
