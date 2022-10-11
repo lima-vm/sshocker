@@ -42,6 +42,10 @@ var (
 			Usage: "enable sshfs nonempty",
 			Value: false,
 		},
+		&cli.StringSliceFlag{
+			Name:  "sshfs-option",
+			Usage: "Set sshfs mount options.",
+		},
 		&cli.StringFlag{
 			Name:  "driver",
 			Usage: "SFTP server driver. \"builtin\" (legacy) or \"openssh-sftp-server\" (robust and secure, recommended), automatically chosen by default",
@@ -94,6 +98,10 @@ func runAction(clicontext *cli.Context) error {
 	if clicontext.Bool("sshfs-nonempty") {
 		sshfsAdditionalArgs = append(sshfsAdditionalArgs, "-o", "nonempty")
 	}
+	for _, o := range clicontext.StringSlice("sshfs-option") {
+		sshfsAdditionalArgs = append(sshfsAdditionalArgs, "-o", o)
+	}
+
 	x := &sshocker.Sshocker{
 		SSHConfig:               sshConfig,
 		Host:                    host,
