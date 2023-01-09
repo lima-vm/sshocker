@@ -125,8 +125,11 @@ func DetectDriver(explicitOpensshSftpServerBinary string) (Driver, string, error
 func (rsf *ReverseSSHFS) Start() error {
 	sshBinary := rsf.SSHConfig.Binary()
 	sshArgs := rsf.SSHConfig.Args()
-	if !filepath.IsAbs(rsf.LocalPath) {
+	if !filepath.IsAbs(rsf.LocalPath) && !path.IsAbs(rsf.LocalPath) {
 		return fmt.Errorf("unexpected relative path: %q", rsf.LocalPath)
+	}
+	if runtime.GOOS == "windows" && path.IsAbs(rsf.LocalPath) {
+		logrus.Infof("Accepting %q Unix path, assuming Cygwin/msys2 OpenSSH", rsf.LocalPath)
 	}
 	if !path.IsAbs(rsf.RemotePath) {
 		return fmt.Errorf("unexpected relative path: %q", rsf.RemotePath)
