@@ -52,7 +52,7 @@ func (rsf *ReverseSSHFS) Prepare() error {
 		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))
 	}
 	sshArgs = append(sshArgs, rsf.Host, "--")
-	sshArgs = append(sshArgs, "mkdir", "-p", rsf.RemotePath)
+	sshArgs = append(sshArgs, "mkdir", "-p", strconv.Quote(rsf.RemotePath))
 	sshCmd := exec.Command(sshBinary, sshArgs...)
 	logrus.Debugf("executing ssh for preparing sshfs: %s %v", sshCmd.Path, sshCmd.Args)
 	out, err := sshCmd.CombinedOutput()
@@ -138,7 +138,7 @@ func (rsf *ReverseSSHFS) Start() error {
 		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))
 	}
 	sshArgs = append(sshArgs, rsf.Host, "--")
-	sshArgs = append(sshArgs, "sshfs", ":"+rsf.LocalPath, rsf.RemotePath, "-o", "slave")
+	sshArgs = append(sshArgs, "sshfs", strconv.Quote(":"+rsf.LocalPath), strconv.Quote(rsf.RemotePath), "-o", "slave")
 	if rsf.Readonly {
 		sshArgs = append(sshArgs, "-o", "ro")
 	}
@@ -261,7 +261,8 @@ export LANG LC_ALL
 i=0
 while : ; do
   # FIXME: not really robust
-  if mount | grep "on ${dir}" | egrep -qw "fuse.sshfs|osxfuse"; then
+  # spaces in file names are encoded as '\040' in the mount table
+  if mount | sed 's/\\040/ /g' | grep "on ${dir}" | egrep -qw "fuse.sshfs|osxfuse"; then
     echo '{"return":{}}'
     exit 0
   fi
