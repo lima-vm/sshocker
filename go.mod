@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/pkg/sftp v1.13.5
-	github.com/sirupsen/logrus v1.9.2
+	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.25.4
 )
 
