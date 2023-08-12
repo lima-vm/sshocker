@@ -9,16 +9,16 @@ jobs:
   main:
     strategy:
       matrix:
-        go-version: [1.20.x]
+        go-version: [1.20.x, 1.21.x]
         platform: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v3
       with:
         fetch-depth: 1
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
     - run: make
     - run: sudo make install
     - run: go test -covermode=atomic -race -v ./...

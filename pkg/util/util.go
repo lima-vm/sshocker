@@ -1,9 +1,8 @@
 package util
 
 import (
+	"errors"
 	"io"
-
-	"github.com/hashicorp/go-multierror"
 )
 
 // RWC composes io.ReadCloser and io.WriteCloser into io.ReadWriteCloser
@@ -13,12 +12,15 @@ type RWC struct {
 }
 
 func (rwc *RWC) Close() error {
-	var merr *multierror.Error
+	var merr error
 	if err := rwc.ReadCloser.Close(); err != nil {
-		merr = multierror.Append(merr, err)
+		merr = errors.Join(merr, err)
 	}
 	if err := rwc.WriteCloser.Close(); err != nil {
-		merr = multierror.Append(merr, err)
+		merr = errors.Join(merr, err)
 	}
-	return merr.ErrorOrNil()
+	if merr != nil {
+		return merr
+	}
+	return nil
 }
