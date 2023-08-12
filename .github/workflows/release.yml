@@ -15,12 +15,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:
-    - uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
     - uses: actions/checkout@v3
       with:
         path: go/src/github.com/lima-vm/sshocker
+    - uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
     - name: "Compile binaries"
       working-directory:  go/src/github.com/lima-vm/sshocker
       run: make cross
