@@ -51,4 +51,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         tag="${GITHUB_REF##*/}"
-        gh release create -F /tmp/release-note.txt --draft "${tag}" --title "${tag}" ./bin/* /tmp/SHA256SUMS
+        gh release create -F /tmp/release-note.txt --draft --title "${tag}" "${tag}" ./bin/* /tmp/SHA256SUMS
