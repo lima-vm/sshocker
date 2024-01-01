@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/pkg/sftp v1.13.6
 	github.com/sirupsen/logrus v1.9.3
-	github.com/urfave/cli/v2 v2.26.0
+	github.com/urfave/cli/v2 v2.27.1
 )
 
 require (
