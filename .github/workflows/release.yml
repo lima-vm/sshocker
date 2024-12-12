@@ -4,13 +4,11 @@ on:
     tags:
     - 'v*'
     - 'test-action-release-*'
-env:
-  GO111MODULE: on
 jobs:
   release:
     strategy:
       matrix:
-        go-version: [1.21.x]
+        go-version: [1.23.x]
         os: [ubuntu-22.04]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
