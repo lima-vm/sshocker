@@ -63,6 +63,9 @@ func (rsf *ReverseSSHFS) Prepare() error {
 }
 
 func DetectOpensshSftpServerBinary() string {
+	if exe, err := exec.LookPath("sftp-server"); err == nil {
+		return exe
+	}
 	homebrewSSHD := []string{
 		"/usr/local/sbin/sshd",
 		"/opt/homebrew/sbin/sshd",
