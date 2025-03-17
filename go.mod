@@ -3,7 +3,7 @@ module github.com/lima-vm/sshocker
 go 1.20
 
 require (
-	github.com/pkg/sftp v1.13.7
+	github.com/pkg/sftp v1.13.8
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli/v2 v2.27.6
 )
