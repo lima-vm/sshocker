@@ -52,7 +52,7 @@ func (rsf *ReverseSSHFS) Prepare() error {
 		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))
 	}
 	sshArgs = append(sshArgs, rsf.Host, "--")
-	sshArgs = append(sshArgs, "mkdir", "-p", strconv.Quote(rsf.RemotePath))
+	sshArgs = append(sshArgs, "mkdir", "-p", addQuotes(rsf.RemotePath))
 	sshCmd := exec.Command(sshBinary, sshArgs...)
 	logrus.Debugf("executing ssh for preparing sshfs: %s %v", sshCmd.Path, sshCmd.Args)
 	out, err := sshCmd.CombinedOutput()
@@ -141,7 +141,7 @@ func (rsf *ReverseSSHFS) Start() error {
 		sshArgs = append(sshArgs, "-p", strconv.Itoa(rsf.Port))
 	}
 	sshArgs = append(sshArgs, rsf.Host, "--")
-	sshArgs = append(sshArgs, "sshfs", strconv.Quote(":"+rsf.LocalPath), strconv.Quote(rsf.RemotePath), "-o", "slave")
+	sshArgs = append(sshArgs, "sshfs", addQuotes(":"+rsf.LocalPath), addQuotes(rsf.RemotePath), "-o", "slave")
 	if rsf.Readonly {
 		sshArgs = append(sshArgs, "-o", "ro")
 	}
@@ -250,6 +250,18 @@ func (rsf *ReverseSSHFS) Start() error {
 		logrus.WithError(err).Warnf("failed to confirm whether %v [remote] is successfully mounted", rsf.RemotePath)
 	}
 	return nil
+}
+
+func addQuotes(input string) string {
+	input = strconv.Quote(input)
+	// exec.Command on Windows would escape wrapping double quotes in a way, which is not compatible
+	// with passing arguments into bash shell over ssh, replacing with single quotes as a workaround.
+	if runtime.GOOS == "windows" {
+		input = strings.TrimPrefix(input, "\"")
+		input = strings.TrimSuffix(input, "\"")
+		return fmt.Sprintf(`'%s'`, input)
+	}
+	return input
 }
 
 func (rsf *ReverseSSHFS) waitForRemoteReady() error {
