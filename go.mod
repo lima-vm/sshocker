@@ -1,6 +1,6 @@
 module github.com/lima-vm/sshocker
 
-go 1.20
+go 1.23.0
 
 require (
 	github.com/pkg/sftp v1.13.9
@@ -13,6 +13,6 @@ require (
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/crypto v0.35.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 )
