@@ -8,7 +8,7 @@ jobs:
   release:
     strategy:
       matrix:
-        go-version: [1.24.x]
+        go-version: [stable]
         os: [ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
