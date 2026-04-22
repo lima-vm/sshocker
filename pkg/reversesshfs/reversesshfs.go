@@ -133,7 +133,11 @@ func (rsf *ReverseSSHFS) Start() error {
 	}
 	if runtime.GOOS == "windows" && path.IsAbs(rsf.LocalPath) {
 		logrus.Infof("Accepting %q Unix path, assuming Cygwin/msys2 OpenSSH", rsf.LocalPath)
+		// Convert MSYS2 path to Windows native path
+		rsf.LocalPath = convertMSYS2Path(rsf.LocalPath)
+		logrus.Infof("Converted path for native Windows OpenSSH: %q", rsf.LocalPath)
 	}
+
 	if !path.IsAbs(rsf.RemotePath) {
 		return fmt.Errorf("unexpected relative path: %q", rsf.RemotePath)
 	}
@@ -326,4 +330,15 @@ func (rsf *ReverseSSHFS) Close() error {
 		return fmt.Errorf("%v", errors)
 	}
 	return nil
+}
+
+// convertMSYS2Path converts an MSYS2 style path (e.g., /c/Users/...) to a Windows native path
+func convertMSYS2Path(localPath string) string {
+	if len(localPath) >= 3 && localPath[0] == '/' && localPath[2] == '/' {
+		driveLetter := strings.ToUpper(string(localPath[1]))
+		// Explicitly force backslashes, bypassing WSL/Linux environment quirks
+		remainingPath := strings.ReplaceAll(localPath[2:], "/", "\\")
+		return driveLetter + ":" + remainingPath
+	}
+	return localPath
 }
