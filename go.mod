@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/pkg/sftp v1.13.11
-	github.com/sirupsen/logrus v1.9.4
+	github.com/sirupsen/logrus v1.10.1
 	github.com/urfave/cli/v2 v2.27.7
 )
 
